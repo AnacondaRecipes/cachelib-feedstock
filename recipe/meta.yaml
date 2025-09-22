@@ -1,42 +1,63 @@
 {% set name = "cachelib" %}
-{% set version = "0.9.0" %}
-
+{% set version = "0.13.0" %}
 
 package:
   name: {{ name|lower }}
   version: {{ version }}
 
 source:
-  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/cachelib-{{ version }}.tar.gz
-  sha256: 38222cc7c1b79a23606de5c2607f4925779e37cdcea1c2ad21b8bae94b5425a5
+  url: https://pypi.org/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
+  sha256: 209d8996e3c57595bee274ff97116d1d73c4980b2fd9a34c7846cd07fd2e1a48
 
 build:
   number: 0
-  script: {{ PYTHON }} -m pip install . -vv
-  skip: True  # [py<37]
+  script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+  skip: true  # [py<38]
 
 requirements:
   host:
     - pip
     - setuptools
-    - wheel
     - python
   run:
     - python
 
+# pymongo.errors.ServerSelectionTimeoutError: localhost:27017: [Errno 61] Connection refused
+{% set ignore_tests = " --ignore=tests/test_dynamodb_cache.py" %}
+{% set ignore_tests = ignore_tests + " --ignore=tests/test_mongodb_cache.py" %}
+
 test:
+  source_files:
+    - tests
   imports:
     - cachelib
-  commands:
-    - pip check
+    - cachelib.base
+    - cachelib.dynamodb
+    - cachelib.file
+    - cachelib.memcached
+    - cachelib.mongodb
+    - cachelib.redis
+    - cachelib.serializers
+    - cachelib.simple
+    - cachelib.uwsgi
   requires:
     - pip
+    - pytest >=8.0.0
+    - pytest-xprocess >=0.23.0
+  commands:
+    - pip check
+    - python -c "from importlib.metadata import version; assert(version('{{ name }}')=='{{ version }}')"
+    - pytest -v tests {{ ignore_tests }}
 
 about:
   home: https://github.com/pallets-eco/cachelib
-  summary: A collection of cache libraries in the same API interface.
+  summary: A collection of cache libraries in the same API interface. Extracted from Werkzeug.
+  description: A collection of cache libraries in the same API interface. Extracted from Werkzeug.
   license: BSD-3-Clause
+  license_family: BSD
   license_file: LICENSE.rst
+  doc_url: https://cachelib.readthedocs.io
+  dev_url: https://github.com/pallets-eco/cachelib
 
 extra:
   recipe-maintainers:
