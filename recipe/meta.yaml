@@ -1,9 +1,6 @@
 {% set name = "cachelib" %}
 {% set version = "0.14.0" %}
-{% set ignore_tests = " --ignore=tests/test_dynamodb_cache.py" %}
-{% set ignore_tests = ignore_tests + " --ignore=tests/test_mongodb_cache.py" %}
 
-# pymongo.errors.ServerSelectionTimeoutError: localhost:27017: [Errno 61] Connection refused
 package:
   name: {{ name|lower }}
   version: {{ version }}
@@ -22,8 +19,13 @@ requirements:
     - pip
     - setuptools
     - python
+    - flit-core <4
   run:
     - python
+
+# pymongo.errors.ServerSelectionTimeoutError: localhost:27017: [Errno 61] Connection refused
+{% set ignore_tests = " --ignore=tests/test_dynamodb_cache.py" %}
+{% set ignore_tests = ignore_tests + " --ignore=tests/test_mongodb_cache.py" %}
 
 test:
   source_files:
@@ -54,7 +56,7 @@ about:
   description: A collection of cache libraries in the same API interface. Extracted from Werkzeug.
   license: BSD-3-Clause
   license_family: BSD
-  license_file: LICENSE.rst
+  license_file: LICENSE.txt
   doc_url: https://cachelib.readthedocs.io
   dev_url: https://github.com/pallets-eco/cachelib
 
