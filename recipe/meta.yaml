@@ -1,5 +1,5 @@
 {% set name = "cachelib" %}
-{% set version = "0.14.0" %}
+{% set version = "0.17.0" %}
 
 package:
   name: {{ name|lower }}
@@ -7,12 +7,12 @@ package:
 
 source:
   url: https://pypi.org/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
-  sha256: 73fedcadd0ba818fb2bb9f3c7cd5fcc2a71e86286f1842f55f28d500faee17f1
+  sha256: f3c7dc8d3c1132ab699681ffdf8a52d341d9425ac1401c538cf0b1d87b1677c8
 
 build:
   number: 0
   script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
-  skip: true  # [py<38]
+  skip: true  # [py<311]
 
 requirements:
   host:
@@ -41,6 +41,7 @@ test:
     - cachelib.serializers
     - cachelib.simple
     - cachelib.uwsgi
+    - cachelib.valkey
   requires:
     - pip
     - pytest >=8.0.0
@@ -48,7 +49,7 @@ test:
   commands:
     - pip check
     - python -c "from importlib.metadata import version; assert(version('{{ name }}')=='{{ version }}')"
-    - pytest -v tests {{ ignore_tests }}
+    - pytest -vv tests {{ ignore_tests }}
 
 about:
   home: https://github.com/pallets-eco/cachelib
