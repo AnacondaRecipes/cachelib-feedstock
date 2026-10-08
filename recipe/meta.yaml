@@ -1,5 +1,5 @@
 {% set name = "cachelib" %}
-{% set version = "0.14.0" %}
+{% set version = "0.17.0" %}
 
 package:
   name: {{ name|lower }}
@@ -7,12 +7,12 @@ package:
 
 source:
   url: https://pypi.org/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
-  sha256: 73fedcadd0ba818fb2bb9f3c7cd5fcc2a71e86286f1842f55f28d500faee17f1
+  sha256: f3c7dc8d3c1132ab699681ffdf8a52d341d9425ac1401c538cf0b1d87b1677c8
 
 build:
   number: 0
   script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
-  skip: true  # [py<38]
+  skip: true  # [py<311]
 
 requirements:
   host:
@@ -23,8 +23,17 @@ requirements:
   run:
     - python
 
-# pymongo.errors.ServerSelectionTimeoutError: localhost:27017: [Errno 61] Connection refused
-{% set ignore_tests = " --ignore=tests/test_dynamodb_cache.py" %}
+# tests requiring a live backend server (redis/memcached/mongodb/dynamodb/valkey)
+# are tagged by upstream with the "network" marker and deselected here instead
+# of ignoring whole files, so the lazy/connection-check tests in the same
+# modules still run
+{% set ignore_tests = " -m \"not network\"" %}
+# valkey is not available in the channel, and its non-network connection-check
+# tests still require the package to be importable
+{% set ignore_tests = ignore_tests + " --ignore=tests/test_valkey_cache.py" %}
+# test_mongodb_cache.py does a bare `import pymongo` at module scope (not
+# guarded by importorskip), so it must be ignored outright since pymongo is
+# not a test dependency here
 {% set ignore_tests = ignore_tests + " --ignore=tests/test_mongodb_cache.py" %}
 
 test:
@@ -41,14 +50,17 @@ test:
     - cachelib.serializers
     - cachelib.simple
     - cachelib.uwsgi
+    - cachelib.valkey
   requires:
     - pip
     - pytest >=8.0.0
     - pytest-xprocess >=0.23.0
+    - redis-py >=6.0.0
+    - boto3 >=1.43.4
   commands:
     - pip check
     - python -c "from importlib.metadata import version; assert(version('{{ name }}')=='{{ version }}')"
-    - pytest -v tests {{ ignore_tests }}
+    - pytest -vv tests {{ ignore_tests }}
 
 about:
   home: https://github.com/pallets-eco/cachelib
